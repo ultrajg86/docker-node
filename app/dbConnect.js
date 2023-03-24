@@ -7,12 +7,11 @@ class DBConnect {
     static DBCONNECTIONPOOL = []
 
     static connect(dbName) {
-        console.log('DBConnect', dbName)
-
+        
         // 이미 연결된게 있는지 확인 후 연결된게 있을 경우 해당 connecion 리턴
         if (!(dbName in database)) throw new DatabaseError({ code: 'DB_MYSQL_UNKNOW', message: 'mysql connection unknow' })
         if (dbName in DBConnect.DBCONNECTIONPOOL) {
-            console.log('기존 커넥션 사용', dbName)
+            console.log('Reuse Connection', dbName)
             return DBConnect.DBCONNECTIONPOOL[dbName]
         }
 
@@ -34,7 +33,7 @@ class DBConnect {
                 return execQuery
             },
         }
-
+        console.log('New Connection', dbName)
         const connection = mysql.createPool(config)
 
         // 연결된 내역 저장

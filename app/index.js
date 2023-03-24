@@ -12,13 +12,14 @@ console.log = function (...message) {
 	logger(...message, ' => ', used + ' MB / ' + seconds + ' seconds / ' + total + ' seconds')
 }
 
-
 const express = require('express')
 const { MONGO_IP, MONGO_PORT, MONGO_USER, MONGO_PASSWORD } = require('./config/config')
+const { DBConnect } = require('./dbConnect')
 
 const app = express()
 
 app.get('/', (req, res) => {
+    const db = DBConnect.connect('localhost')
     res.send('<h1>Hello World</h1>')
 })
 
