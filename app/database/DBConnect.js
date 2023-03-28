@@ -41,27 +41,26 @@ class DBConnect {
         return DBConnect.DBCONNECTIONPOOL[dbName]
     }
 
-    // 
-    static async startTransaction() {
-        for (const dbName in DBConnect.DBCONNECTIONPOOL) {
-            const conn = DBConnect.DBCONNECTIONPOOL[dbName]
-            await conn.startTransaction()
-        }
-    }
+    // static async startTransaction() {
+    //     for (const dbName in DBConnect.DBCONNECTIONPOOL) {
+    //         const conn = DBConnect.DBCONNECTIONPOOL[dbName]
+    //         await conn.startTransaction()
+    //     }
+    // }
 
-    static async commitTransaction() {
-        for (const dbName in DBConnect.DBCONNECTIONPOOL) {
-            const conn = DBConnect.DBCONNECTIONPOOL[dbName]
-            await conn.commitTransaction()
-        }
-    }
+    // static async commitTransaction() {
+    //     for (const dbName in DBConnect.DBCONNECTIONPOOL) {
+    //         const conn = DBConnect.DBCONNECTIONPOOL[dbName]
+    //         await conn.commitTransaction()
+    //     }
+    // }
 
-    static async rollbackTransaction() {
-        for (const dbName in DBConnect.DBCONNECTIONPOOL) {
-            const conn = DBConnect.DBCONNECTIONPOOL[dbName]
-            await conn.rollbackTransaction()
-        }
-    }
+    // static async rollbackTransaction() {
+    //     for (const dbName in DBConnect.DBCONNECTIONPOOL) {
+    //         const conn = DBConnect.DBCONNECTIONPOOL[dbName]
+    //         await conn.rollbackTransaction()
+    //     }
+    // }
 
     constructor(dbName, connection) {
         this.dbName = dbName
@@ -238,8 +237,9 @@ class DBConnect {
 }
 
 class DataBaseError extends Error {
-    constructor(message) {
+    constructor({ code, message }) {
         super(message)
+        this.code = code
     }
 }
 
