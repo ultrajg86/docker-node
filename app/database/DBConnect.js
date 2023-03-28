@@ -1,5 +1,5 @@
 const mysql = require('mysql')
-const { database } = require('./config/config')
+const { database } = require('../config/config')
 
 class DBConnect {
 
@@ -7,9 +7,9 @@ class DBConnect {
     static DBCONNECTIONPOOL = []
 
     static connect(dbName) {
-        
+
         // 이미 연결된게 있는지 확인 후 연결된게 있을 경우 해당 connecion 리턴
-        if (!(dbName in database)) throw new DatabaseError({ code: 'DB_MYSQL_UNKNOW', message: 'mysql connection unknow' })
+        if (!(dbName in database)) throw new DataBaseError({ code: 'DB_MYSQL_UNKNOW', message: 'mysql connection unknow' })
         if (dbName in DBConnect.DBCONNECTIONPOOL) {
             console.log('Reuse Connection', dbName)
             return DBConnect.DBCONNECTIONPOOL[dbName]
@@ -41,26 +41,27 @@ class DBConnect {
         return DBConnect.DBCONNECTIONPOOL[dbName]
     }
 
-    // static async startTransaction() {
-    //     for (const dbName in DBConnect.DBCONNECTIONPOOL) {
-    //         const conn = DBConnect.DBCONNECTIONPOOL[dbName]
-    //         await conn.startTransaction()
-    //     }
-    // }
+    // 
+    static async startTransaction() {
+        for (const dbName in DBConnect.DBCONNECTIONPOOL) {
+            const conn = DBConnect.DBCONNECTIONPOOL[dbName]
+            await conn.startTransaction()
+        }
+    }
 
-    // static async commitTransaction() {
-    //     for (const dbName in DBConnect.DBCONNECTIONPOOL) {
-    //         const conn = DBConnect.DBCONNECTIONPOOL[dbName]
-    //         await conn.commitTransaction()
-    //     }
-    // }
+    static async commitTransaction() {
+        for (const dbName in DBConnect.DBCONNECTIONPOOL) {
+            const conn = DBConnect.DBCONNECTIONPOOL[dbName]
+            await conn.commitTransaction()
+        }
+    }
 
-    // static async rollbackTransaction() {
-    //     for (const dbName in DBConnect.DBCONNECTIONPOOL) {
-    //         const conn = DBConnect.DBCONNECTIONPOOL[dbName]
-    //         await conn.rollbackTransaction()
-    //     }
-    // }
+    static async rollbackTransaction() {
+        for (const dbName in DBConnect.DBCONNECTIONPOOL) {
+            const conn = DBConnect.DBCONNECTIONPOOL[dbName]
+            await conn.rollbackTransaction()
+        }
+    }
 
     constructor(dbName, connection) {
         this.dbName = dbName
@@ -70,6 +71,7 @@ class DBConnect {
 
     async release() {
         this.connection.end()
+        delete DBConnect.DBCONNECTIONPOOL[this.dbName]
         console.log(`RELEASE ${this.dbName}`)
     }
 
@@ -85,7 +87,7 @@ class DBConnect {
     async startTransaction() {
         await this.getConnection()
         if (this.connectionWithTransaction === undefined) {
-            throw new DatabaseError('Transaction Connection Undefined')
+            throw new DataBaseError('Transaction Connection Undefined')
         }
         await new Promise((res, rej) => {
             this.connectionWithTransaction.beginTransaction((err) => {
@@ -165,9 +167,13 @@ class DBConnect {
      * @returns 
      */
     //async select(table, where = {}, { fields = ['*'], lock = false }) {
-    async select(table, where = {}, fields = ['*']) {
+    async select(table, where = {}, fields = []) {
         console.log(`[SQL][SELECT] ${table} -- ${JSON.stringify(where)}`)
-        const selectFields = (typeof fields === 'string') ? fields.split(',').map(it => it.trim()) : fields
+
+        console.log(fields.length)
+
+        const selectFields = (Array.isArray(fields)) ? fields : fields.split(',').map(it => it.trim())
+        console.log(selectFields)
         let conditions = []
         if (Object.keys(where).length > 0) {
             for (const w of Object.keys(where)) {
@@ -179,6 +185,7 @@ class DBConnect {
                 }
             }
         }
+
         let query = `SELECT ?? FROM ??`
         if (conditions.length > 0) {
             query += ' WHERE ' + conditions.join(' AND ')
@@ -190,7 +197,7 @@ class DBConnect {
     async insert(table, params) {
         console.log(`[SQL][INSERT] ${table} -- ${JSON.stringify(params)}`)
         if (params === undefined || Object.values(params).length < 1) {
-            throw new DatabaseError({ code: 'DB_MYSQL_WHERE', message: 'INSERT params Undefined' })
+            throw new DataBaseError({ code: 'DB_MYSQL_WHERE', message: 'INSERT params Undefined' })
         }
         const query = mysql.format(`INSERT INTO ?? (??) VALUES (?)`, [table, Object.keys(params), Object.values(params)])
         return await this.query(query, {})
@@ -199,7 +206,7 @@ class DBConnect {
     async update(table, params, where) {
         console.log(`[SQL][UPDATE] ${table} -- ${JSON.stringify(params)}`)
         if (where === undefined || Object.values(where).length < 1) {
-            throw new DatabaseError({ code: 'DB_MYSQL_WHERE', message: 'UPDATE Where Undefined' })
+            throw new DataBaseError({ code: 'DB_MYSQL_WHERE', message: 'UPDATE Where Undefined' })
         }
         let query = `UPDATE ?? SET ? WHERE `
         const conditions = []
@@ -218,7 +225,7 @@ class DBConnect {
     async delete(table, where) {
         console.log(`[SQL][DELETE] ${table} -- ${JSON.stringify(where)}`)
         if (where === undefined || Object.values(where).length < 1) {
-            throw new DatabaseError({ code: 'DB_MYSQL_WHERE', message: 'UPDATE Where Undefined' })
+            throw new DataBaseError({ code: 'DB_MYSQL_WHERE', message: 'UPDATE Where Undefined' })
         }
         const query = mysql.format(`DELETE FROM ?? WHERE ?`, [table, where])
         return await this.query(query, {})
@@ -230,14 +237,13 @@ class DBConnect {
 
 }
 
-function DatabaseError({ code, message }) {
-    this.name = 'DatabaseError'
-    this.message = message
-    this.code = code
-    this.stack = (new Error()).stack
+class DataBaseError extends Error {
+    constructor(message) {
+        super(message)
+    }
 }
 
 module.exports = {
     DBConnect,
-    DatabaseError
+    DataBaseError,
 }
