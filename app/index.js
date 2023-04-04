@@ -12,25 +12,20 @@ console.log = function (...message) {
     logger(...message, ' => ', used + ' MB / ' + seconds + ' seconds / ' + total + ' seconds')
 }
 
-const express = require('express')
-const { CustomLogger, Logger } = require('./CustomLogger')
-const { DBConnect } = require('./database/DBConnect')
+import express from 'express'
+// import { CustomLogger, Logger } from './CustomLogger'
+import { DBConnect } from './database/DBConnect'
 
 const app = express()
 
 // Logger.message('aalalalalal')
 
 app.get('/', async (req, res) => {
-
     const db = DBConnect.connect('localhost')
-
     const test = await db.select('employee')
     console.log(test)
-
     db.release()
-
     res.send(JSON.stringify(test))
-
 })
 
 const port = process.env.PORT || 3000;

@@ -243,7 +243,7 @@ class DataBaseError extends Error {
     }
 }
 
-module.exports = {
+exports = {
     DBConnect,
     DataBaseError,
 }

@@ -160,5 +160,5 @@ class Logger {
     }
 }
 
-// export { CustomLogger, Logger }
-module.exports = { CustomLogger, Logger }
+export { CustomLogger, Logger }
+// module.exports = { CustomLogger, Logger }
